@@ -1,0 +1,45 @@
+<div class="main-container">
+
+    <div class="loggedUsers">
+        <ul class="loggedUsers-ul">
+            <li class="noBullets" *ngFor="let chat of listOfAvailableChats | keyvalue">
+                <div class="loggedUsers-row-container">
+                    <p class="loggedUser" [class.chat-selected]="chat.value.isSelected"
+                        (click)="loadMessages(chat.key)">
+                        {{chat.key}} <span [hidden]="chat.value.isConnected" style="font-style:italic">
+                            (offline)</span></p>
+                    <p [hidden]="!chat.value.hasNewMessages || chat.value.isSelected" class="unread-message"></p>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <div class="chat-container">
+
+        <div #messagescard class="messages-card overflow-scroll">
+            <div *ngFor="let message of messages.get(activeChat)">
+                <div [class.align-right]="username === message.sender && message.type === 'CHAT'"
+                    [class.align-center]="message.type !== 'CHAT'">
+                    <div [class.message-group]="message.type === 'CHAT'"
+                        [class.message-group-system]="message.type !== 'CHAT'"
+                        [class.border-right]="username === message.sender && message.type === 'CHAT'"
+                        [class.border-left]="username !== message.sender && message.type === 'CHAT'">
+                        <p [hidden]="hideSender(message)" class="message-sender">{{message.sender}}</p>
+                        <p class="message-content">{{message.content}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="message-form-card">
+            <form (ngSubmit)="prepareMessage()">
+                <div class="container-h">
+                    <input type="text" class="form-control" id="message" name="message" [(ngModel)]="message">
+                    <button class="btn btn-primary">Send</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+</div>

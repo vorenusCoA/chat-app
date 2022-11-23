@@ -1,0 +1,10 @@
+<div class="login-card">
+    <form #form="ngForm" (ngSubmit)="login(form)">
+        <div class="mb-3 form-group">
+            <label [hidden]="errorMessage" for="username" class="form-label" [class.error]="form.submitted && username.invalid">Please, enter your username</label>
+            <p [hidden]="!errorMessage" class="error" >{{errorMessage}}</p>
+            <input #username="ngModel" id="username" class="form-control"  name="username" [(ngModel)]="model.username" required>
+        </div>
+        <button class="btn btn-primary">Login</button>
+    </form>
+</div>
