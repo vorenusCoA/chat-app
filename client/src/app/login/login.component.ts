@@ -27,13 +27,11 @@ export class LoginComponent implements OnInit {
     this.loginService.login(this.model).subscribe({
       next: (user) => {
         this.loginService.setUsername(user.username);
-        console.log("Setting the username: ", user.username);
         this.router.navigate(["/chat"]);
       }, error: (error) => {
         this.errorMessage = "Username already taken, please choose a new one";
       }
     })
-
   }
 
 }

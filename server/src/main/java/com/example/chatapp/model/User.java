@@ -8,17 +8,17 @@ import javax.persistence.Table;
 @Table(name = "USERS")
 public class User {
 
-	@Id
-	private String username;
-	
-	public User() {}
+    @Id
+    private String username;
 
-	public User(String username) {
-		this.username = username;
-	}
-	
-	public String getUsername() {
-		return username;
-	}
+    public User() {}
+
+    public User(String username) {
+        this.username = username;
+    }
+
+    public String getUsername() {
+        return username;
+    }
 
 }

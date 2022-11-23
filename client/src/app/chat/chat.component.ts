@@ -7,7 +7,6 @@ import { Message } from '@stomp/stompjs';
 import { ChatMessage } from '../model/chatMessage';
 import { ChatService } from '../chat.service';
 import { MessageType } from '../model/messageType';
-import { User } from '../model/user';
 
 const GENERAL_CHAT = "General Chat";
 
@@ -35,38 +34,35 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   constructor(private loginService: LoginService, private router: Router, private rxStompService: RxStompService, private chatService: ChatService) {
 
     this.messages.set(GENERAL_CHAT, []);
-    this.listOfAvailableChats.set(GENERAL_CHAT, { isConnected: true, isSelected: true, hasNewMessages: false} );
+    this.listOfAvailableChats.set(GENERAL_CHAT, { isConnected: true, isSelected: true, hasNewMessages: false });
 
   }
 
   ngOnInit(): void {
 
-    // If there is no username then go to login page
-    if (!this.loginService.getUsername()) {
-      this.router.navigate(["/login"])
-      return
-    }
 
     this.username = this.loginService.getUsername();
 
-    console.log("Calling chat.addUser with user: ", this.username);
+    // If there is no username then go to login page
+    if (!this.username) {
+      this.router.navigate(["/login"])
+      return
+    }
 
     // Let the server know your username
     this.rxStompService.publish({
       destination: '/app/chat.addUser',
       body: JSON.stringify({
         sender: this.username,
-        type: 'JOIN',
+        type: MessageType.JOIN,
         content: this.username + " joined!",
         receiver: GENERAL_CHAT
       })
     });
 
-    console.log("Subscribing to topic/public");
-
+    // Subscribe to the public channel
     this.topicSubscription = this.rxStompService.watch('/topic/public').subscribe((message: Message) => {
-      let chatMessage = JSON.parse(message.body);
-      console.log("chatMessage: ", chatMessage)
+      let chatMessage: ChatMessage = JSON.parse(message.body);
       let messages = this.messages.get(GENERAL_CHAT);
       messages?.push(chatMessage);
       this.messages.set(GENERAL_CHAT, messages);
@@ -76,17 +72,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         options.hasNewMessages = true;
       }
 
-      if (chatMessage.type === 'LEAVE') {
+      if (chatMessage.type === MessageType.LEAVE) {
         this.removeLoggedUser(chatMessage.sender);
       }
 
-      if (chatMessage.type === 'JOIN') {
+      if (chatMessage.type === MessageType.JOIN) {
         this.addLoggedUser(chatMessage.sender);
       }
 
     });
 
-
+    // Subscribe to the user private channel
     this.privateSubscription = this.rxStompService.watch('/user/' + this.username + "/").subscribe((message: Message) => {
 
       let chatMessage: ChatMessage = JSON.parse(message.body);
@@ -103,7 +99,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
 
     this.chatService.getLoggedUsers().subscribe((data) => {
-      console.log("Loading logged users for first time");
       for (let user of data) {
         this.addLoggedUser(user.username);
       }
@@ -119,7 +114,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   addLoggedUser(user: string) {
-    console.log("Adding logged user to list: ", user);
     // We don't want our user in the list
     if (user !== this.username) {
       let options = this.listOfAvailableChats.get(user);
@@ -133,17 +127,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   removeLoggedUser(user: string) {
-    console.log("Removing logged user from list: ", user);
-
     let options = this.listOfAvailableChats.get(user);
     options.isConnected = false;
     this.listOfAvailableChats.set(user, options);
   }
 
   hideSender(message: any): boolean {
-    if (message.type !== 'CHAT')
+    if (message.type !== MessageType.CHAT)
       return true;
-    
+
     if (this.activeChat !== GENERAL_CHAT)
       return true;
 
@@ -170,17 +162,15 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     const destination = this.activeChat === GENERAL_CHAT ? '/app/chat.sendMessage' : '/app/private-message';
 
-    const chatMessage: ChatMessage = {sender: this.username, type: MessageType.CHAT, content: this.message, receiver: this.activeChat};
-    
+    const chatMessage: ChatMessage = { sender: this.username, type: MessageType.CHAT, content: this.message, receiver: this.activeChat };
+
 
     if (this.activeChat !== GENERAL_CHAT) {
-      console.log("adding private message")
       let messages = this.messages.get(this.activeChat);
       if (!messages)
         messages = []
       messages?.push(chatMessage);
       this.messages.set(this.activeChat, messages);
-      console.log("messages in private chat: ", this.messages)
     }
 
     this.sendMessage(destination, JSON.stringify(chatMessage));
@@ -201,9 +191,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     options.isSelected = false;
 
     this.activeChat = chat;
-
-
-
   }
 
 }
