@@ -12,3 +12,4 @@ A Web App built with Spring, Angular and WebSockets
 - From /client directory:
   - install dependencies: `npm install`
   - run: `ng serve`
+- From the browser access: http://localhost:4200/login
